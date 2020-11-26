@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"container/heap"
+	"container/list"
 	"context"
 	"demo/models"
 	"demo/mongowatch"
@@ -21,12 +21,10 @@ func CacheSelf() Cache {
 	return recordCache
 }
 
-type recordHeap []*models.Record
-
 type cacheImp struct {
 	sync.Mutex
-	dict map[string]*models.Record
-	tree recordHeap
+	dict map[string]*list.Element
+	l    *list.List
 	size int
 }
 
@@ -34,8 +32,8 @@ var recordCache Cache
 
 func init() {
 	recordCache = &cacheImp{
-		dict: make(map[string]*models.Record),
-		tree: make([]*models.Record, 0),
+		dict: make(map[string]*list.Element),
+		l:    list.New(),
 		size: 10,
 	}
 	stream := mongowatch.GetWatch()
@@ -76,9 +74,19 @@ func update(data bson.M) {
 
 func (c *cacheImp) Get(id string) models.Record {
 	c.Lock()
-	r := c.dict[id]
+	r := c.dict[id].Value.(*models.Record)
 	c.Unlock()
 	return *r
+}
+
+func (c *cacheImp) printList() {
+	head := c.l.Front()
+	if head != nil {
+		for head != nil {
+			log.Println(*head.Value.(*models.Record))
+			head = head.Next()
+		}
+	}
 }
 
 func (c *cacheImp) Put(record models.Record) {
@@ -86,27 +94,19 @@ func (c *cacheImp) Put(record models.Record) {
 	defer c.Unlock()
 	v, ok := c.dict[record.Id]
 	if ok {
-		*v = record
+		*v.Value.(*models.Record) = record
+		c.l.MoveToFront(v)
 	} else {
-		if len(c.tree) >= c.size {
-			v := c.tree[0]
-			delete(c.dict, v.Id)
-			*v = record
-			heap.Fix(&c.tree, 0)
-		} else {
-			c.dict[record.Id] = &record
-			heap.Push(&c.tree, &record)
+		e := list.Element{
+			Value: &record,
 		}
+		if c.l.Len() >= c.size {
+			c.l.Remove(c.l.Back())
+		}
+		c.l.PushFront(e)
+	}
 
-	}
-	for k, v := range c.dict {
-		log.Println(k, ":", *v)
-	}
-	log.Println("--------------------")
-	for k, v := range c.tree {
-		log.Println(k, ":", *v)
-	}
-	log.Println("--------------------")
+	c.printList()
 }
 
 func (c *cacheImp) Delete(id string) {
@@ -116,38 +116,6 @@ func (c *cacheImp) Delete(id string) {
 	if !ok {
 		return
 	}
-	v.Data = nil
-
-	for k, v := range c.dict {
-		log.Println(k, ":", *v)
-	}
-	log.Println("--------------------")
-	for k, v := range c.tree {
-		log.Println(k, ":", *v)
-	}
-	log.Println("--------------------")
-}
-
-func (h recordHeap) Len() int {
-	return len(h)
-}
-
-func (h recordHeap) Less(i, j int) bool {
-	return h[i].LastModified.Before(h[j].LastModified)
-}
-
-func (h recordHeap) Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
-}
-
-func (h *recordHeap) Push(e interface{}) {
-	*h = append(*h, e.(*models.Record))
-}
-
-func (h *recordHeap) Pop() interface{} {
-	old := *h
-	n := len(old)
-	item := old[n-1]
-	*h = old[0 : n-1]
-	return item
+	c.l.Remove(v)
+	c.printList()
 }
