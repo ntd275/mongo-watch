@@ -117,6 +117,15 @@ func (c *cacheImp) Delete(id string) {
 		return
 	}
 	v.Data = nil
+
+	for k, v := range c.dict {
+		log.Println(k, ":", *v)
+	}
+	log.Println("--------------------")
+	for k, v := range c.tree {
+		log.Println(k, ":", *v)
+	}
+	log.Println("--------------------")
 }
 
 func (h recordHeap) Len() int {
@@ -124,7 +133,7 @@ func (h recordHeap) Len() int {
 }
 
 func (h recordHeap) Less(i, j int) bool {
-	return h[i].LastModified.After(h[j].LastModified)
+	return h[i].LastModified.Before(h[j].LastModified)
 }
 
 func (h recordHeap) Swap(i, j int) {
