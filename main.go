@@ -1,9 +1,10 @@
 package main
 
 import (
-	"demo/watch"
+	_ "demo/cache"
+	"time"
 )
 
 func main() {
-	watch.Watch()
+	time.Sleep(time.Hour)
 }
