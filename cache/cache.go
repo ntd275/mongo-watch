@@ -7,7 +7,6 @@ import (
 	"demo/mongowatch"
 	"log"
 	"sync"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -57,9 +56,13 @@ func update(data bson.M) {
 	case "insert", "update", "replace":
 		{
 			var record models.Record
-			record.Id = data["fullDocument"].(bson.M)["_id"].(string)
-			record.Data = data["fullDocument"].(bson.M)["data"]
-			record.LastModified = data["fullDocument"].(bson.M)["lastmodified"].(time.Time)
+			bsonBytes, err := bson.Marshal(data["fullDocument"])
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err := bson.Unmarshal(bsonBytes, &record); err != nil {
+				log.Fatal(err)
+			}
 			CacheSelf().Put(record)
 		}
 	case "delete":
