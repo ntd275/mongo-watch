@@ -99,7 +99,8 @@ func (c *cacheImp) Put(record models.Record) {
 		}
 
 	}
-	log.Println(record)
+	log.Println(c.tree)
+	log.Println(c.dict)
 }
 
 func (c *cacheImp) Delete(id string) {

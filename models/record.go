@@ -5,7 +5,7 @@ import (
 )
 
 type Record struct {
-	Id           string
-	Data         interface{}
-	LastModified time.Time
+	Id           string      `bson:"_id"`
+	Data         interface{} `bson:"data"`
+	LastModified time.Time   `bson:"lastmodified"`
 }
