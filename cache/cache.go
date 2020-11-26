@@ -36,7 +36,7 @@ func init() {
 	recordCache = &cacheImp{
 		dict: make(map[string]*models.Record),
 		tree: make([]*models.Record, 0),
-		size: 1000000,
+		size: 10,
 	}
 	stream := mongowatch.GetWatch()
 	go func() {

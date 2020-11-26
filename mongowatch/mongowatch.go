@@ -28,7 +28,9 @@ func init() {
 }
 
 func GetWatch() *mongo.ChangeStream {
-	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{})
+	op := options.ChangeStream()
+	op.SetFullDocument(options.UpdateLookup)
+	stream, err := collection.Watch(context.TODO(), mongo.Pipeline{}, op)
 	if err != nil {
 		panic(err)
 	}
