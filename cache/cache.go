@@ -57,9 +57,9 @@ func update(data bson.M) {
 	case "insert", "update", "replace":
 		{
 			var record models.Record
-			record.Id = data["documentKey"].(bson.M)["_id"].(string)
-			record.Data = data["documentKey"].(bson.M)["data"]
-			record.LastModified = data["documentKey"].(bson.M)["lastmodified"].(time.Time)
+			record.Id = data["fullDocument"].(bson.M)["_id"].(string)
+			record.Data = data["fullDocument"].(bson.M)["data"]
+			record.LastModified = data["fullDocument"].(bson.M)["lastmodified"].(time.Time)
 			CacheSelf().Put(record)
 		}
 	case "delete":
