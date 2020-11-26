@@ -57,18 +57,14 @@ func update(data bson.M) {
 	case "insert", "update", "replace":
 		{
 			var record models.Record
-			if err := bson.Unmarshal(data["fullDocument"].([]byte), &record); err != nil {
-				log.Fatal(err)
-			}
+			record.Id = data["documentKey"].(bson.M)["_id"].(string)
+			record.Data = data["documentKey"].(bson.M)["data"]
+			record.LastModified = data["documentKey"].(bson.M)["lastmodified"].(time.Time)
 			CacheSelf().Put(record)
 		}
 	case "delete":
 		{
-			var docKey bson.M
-			if err := bson.Unmarshal(data["documentKey"].([]byte), &docKey); err != nil {
-				log.Fatal(err)
-			}
-			id := docKey["_id"].(string)
+			id := data["documentKey"].(bson.M)["_id"].(string)
 			CacheSelf().Delete(id)
 		}
 	}
@@ -111,7 +107,6 @@ func (c *cacheImp) Delete(id string) {
 		return
 	}
 	v.Data = nil
-	v.LastModified = time.Date(2000, time.November, 10, 23, 0, 0, 0, time.UTC)
 }
 
 func (h recordHeap) Len() int {
