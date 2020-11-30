@@ -3,6 +3,7 @@ package cache
 import (
 	"container/list"
 	"context"
+	"demo/common"
 	"demo/models"
 	"demo/mongowatch"
 	"log"
@@ -12,7 +13,7 @@ import (
 )
 
 type Cache interface {
-	Get(id string) models.Record
+	Get(id string) (models.Record, error)
 	Put(record models.Record)
 	Delete(id string)
 }
@@ -72,11 +73,16 @@ func update(data bson.M) {
 
 }
 
-func (c *cacheImp) Get(id string) models.Record {
+func (c *cacheImp) Get(id string) (r models.Record, err error) {
 	c.Lock()
-	r := c.dict[id].Value.(*models.Record)
+	temp, ok := c.dict[id]
+	if !ok {
+		err = common.ErrorNotFound
+		return
+	}
+	r = *temp.Value.(*models.Record)
 	c.Unlock()
-	return *r
+	return
 }
 
 func (c *cacheImp) printList() {
