@@ -75,13 +75,13 @@ func update(data bson.M) {
 
 func (c *cacheImp) Get(id string) (r models.Record, err error) {
 	c.Lock()
+	defer c.Unlock()
 	temp, ok := c.dict[id]
 	if !ok {
 		err = common.ErrorNotFound
 		return
 	}
 	r = *temp.Value.(*models.Record)
-	c.Unlock()
 	return
 }
 
