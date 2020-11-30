@@ -102,6 +102,7 @@ func (c *cacheImp) Put(record models.Record) {
 			c.l.Remove(c.l.Back())
 		}
 		c.l.PushFront(&record)
+		c.dict[record.Id] = c.l.Front()
 	}
 
 	c.printList()
