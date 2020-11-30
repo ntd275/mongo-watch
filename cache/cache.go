@@ -87,6 +87,7 @@ func (c *cacheImp) printList() {
 			head = head.Next()
 		}
 	}
+	log.Println("-------------")
 }
 
 func (c *cacheImp) Put(record models.Record) {
@@ -94,16 +95,13 @@ func (c *cacheImp) Put(record models.Record) {
 	defer c.Unlock()
 	v, ok := c.dict[record.Id]
 	if ok {
-		*v.Value.(*models.Record) = record
+		v.Value = &record
 		c.l.MoveToFront(v)
 	} else {
-		e := list.Element{
-			Value: &record,
-		}
 		if c.l.Len() >= c.size {
 			c.l.Remove(c.l.Back())
 		}
-		c.l.PushFront(e)
+		c.l.PushFront(&record)
 	}
 
 	c.printList()
@@ -117,5 +115,6 @@ func (c *cacheImp) Delete(id string) {
 		return
 	}
 	c.l.Remove(v)
+	delete(c.dict, id)
 	c.printList()
 }
