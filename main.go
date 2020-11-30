@@ -1,10 +1,8 @@
 package main
 
-import (
-	_ "demo/cache"
-	"time"
-)
+import "demo/routers"
 
 func main() {
-	time.Sleep(time.Hour)
+	r := routers.NewRouter()
+	r.Run()
 }
